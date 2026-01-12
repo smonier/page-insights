@@ -1,0 +1,1 @@
+appShell.remotes["page-insights"]={builder:"@jahia/vite-federation-plugin@0.1.0 @module-federation/vite@1.9.4",async init(...a){const m=await import("./index.js");await m.init(...a);Object.assign(this,m)}};
