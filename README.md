@@ -10,6 +10,11 @@ Page Insights is a Jahia module that adds an insights widget to the JContent pag
 - Refresh action with caching to avoid repeated calls
 - Optional link to the jExperience dashboard when the dashboards module is installed
 
+## Screenshot
+
+![picture](./settings/assets/page-insights.png)
+
+
 ## Requirements
 
 - Jahia with the `jexperience` module installed
