@@ -1,12 +1,24 @@
-# Welcome!
+# Page Insights Module
 
-Your JavaScript module was successfully created. If this is your first time creating a module, you may want to consult the [Getting Started guide](https://academy.jahia.com/tutorials-get-started/front-end-developer/setting-up-your-dev-environment#create-a-new-project).
+Page Insights is a Jahia module that adds an insights widget to the JContent page header. It queries jExperience/Unomi through the built-in proxy to show visit metrics and a time-series chart for the current page.
 
-This README assumes you have a working development environment with Node.js, Yarn and Docker installed and configured. Please refer to the [Getting Started](https://academy.jahia.com/tutorials-get-started/front-end-developer/setting-up-your-dev-environment) guide if you need help setting up your environment.
+## Features
+
+- Summary metrics: all visits, visits in range, unique sessions, unique visitors, direct entries
+- Time range selector (today, last week, last month, last 3/6 months)
+- Time-series chart of page views
+- Refresh action with caching to avoid repeated calls
+- Optional link to the jExperience dashboard when the dashboards module is installed
+
+## Requirements
+
+- Jahia with the `jexperience` module installed
+- Site must have `jexperience` and `page-insights` installed
+- Optional: `jexperience-dashboards` to enable the dashboard button
 
 ## Getting Started
 
-This module is accompanied by a Docker-based development environment. To get started, follow these steps:
+This module ships with a Docker-based development environment.
 
 ```bash
 # Install dependencies
@@ -15,15 +27,15 @@ yarn install
 # Start Jahia in Docker
 docker compose up --wait
 
-# Start the dev mode
+# Start the dev mode (watch build)
 yarn dev
 ```
 
-These commands will start a Jahia instance in a Docker container and start a watcher that will automatically build your module every time you make changes to the source code.
+The watcher rebuilds the module whenever source files change.
 
 ## Commands
 
-This module comes with some scripts to help you develop your module. You can run them with `yarn <script>`:
+Run scripts with `yarn <script>`:
 
 | Category     | Script                | Description                                                             |
 | ------------ | --------------------- | ----------------------------------------------------------------------- |
@@ -36,6 +48,56 @@ This module comes with some scripts to help you develop your module. You can run
 | Utils        | `package`             | Packs distributions files in a `.tgz` archive inside the `dist/` folder |
 | Utils        | `watch:callback`      | Called every time a build succeeds in watch mode                        |
 
+## Usage
+
+- Open JContent and navigate to a page.
+- The Page Insights header appears for `jnt:page` nodes when the module is installed.
+- Click the header to expand/collapse the insights content.
+
 ## Configuration
 
-If you don't use default configuration for the Docker container port and credentials, please modify the provided `.env` file.
+The module reads configuration from `window.contextJsParameters`:
+
+- `contextJsParameters.config.pageInsights.unomiBaseUrl`: base URL for the Unomi proxy. If unset, the current origin is used.
+- `contextJsParameters.siteKey` (or `contextJsParameters.site.key`): site key for the proxy path.
+
+If your Unomi proxy is not on the same origin, inject `unomiBaseUrl` via your Jahia configuration so the UI can reach `/modules/jexperience/proxy/<siteKey>` on the correct host.
+
+## Data Source
+
+The UI calls the jExperience proxy endpoints to fetch:
+
+- Total page views (all time)
+- Page views in the selected time range (daily aggregation)
+- Direct entries
+- Unique sessions and visitors
+
+Requests are executed via `/modules/jexperience/proxy/<siteKey>` and cached per page/range in the browser to reduce round-trips.
+
+## Localization
+
+Translations live in `settings/locales/` under the `page-insights` namespace. Add or update keys there to localize the UI.
+
+## Project Structure
+
+- `src/pageInsightsBlock.tsx`: page header UI and chart rendering
+- `src/unomiInsightsService.js`: Unomi proxy calls, caching, and normalization
+- `src/init.tsx`: UI extender registration
+- `settings/locales/`: i18n resources
+
+## Deployment
+
+To deploy to a Jahia instance, ensure `.env` has valid credentials and host, then run:
+
+```bash
+yarn build
+yarn deploy
+```
+
+You can edit `.env` to match your environment (defaults are provided).
+
+## Troubleshooting
+
+- No widget appears: verify the `jexperience` module and `page-insights` are installed on the site.
+- Errors in the widget: check the Unomi proxy availability and response status. If your proxy requires auth, add headers in `src/unomiInsightsService.js`.
+
