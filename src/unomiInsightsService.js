@@ -11,9 +11,7 @@ const getDefaultBaseUrl = () => {
   }
 
   return (
-    window.contextJsParameters?.config?.pageInsights?.unomiBaseUrl ||
-    window.location?.origin ||
-    ""
+    window.contextJsParameters?.config?.pageInsights?.unomiBaseUrl || window.location?.origin || ""
   );
 };
 
@@ -22,11 +20,7 @@ const getDefaultSiteKey = () => {
     return "";
   }
 
-  return (
-    window.contextJsParameters?.siteKey ||
-    window.contextJsParameters?.site?.key ||
-    ""
-  );
+  return window.contextJsParameters?.siteKey || window.contextJsParameters?.site?.key || "";
 };
 
 /**
@@ -108,7 +102,7 @@ const buildQueryRequest = ({
     options: {
       method: "POST",
       headers: {
-        Accept: "application/json",
+        "Accept": "application/json",
         "Content-Type": "application/json",
       },
       // TODO: If your proxy does not handle auth, add Basic Auth headers here.
@@ -162,8 +156,15 @@ const buildQueryRequest = ({
                   },
                 },
               }
-            : {}),
-        }
+            : endpointPath === "/cxs/query/event/sessionId" ||
+                endpointPath === "/cxs/query/event/profileId"
+              ? {
+                  aggregate: {
+                    type: "string",
+                  },
+                }
+              : {}),
+        },
       ),
     },
   };
@@ -282,33 +283,60 @@ export const getPageInsights = async ({
       siteKey,
       pagePath,
       timeRangeKey,
-      endpointPath:
-        "/cxs/query/event/target.properties.pageInfo.sameDomainReferrer",
+      endpointPath: "/cxs/query/event/target.properties.pageInfo.sameDomainReferrer",
+      includeTimeRange: true,
+      optimizedQuery: true,
+    });
+    const sessionRequest = buildQueryRequest({
+      baseUrl,
+      siteKey,
+      pagePath,
+      timeRangeKey,
+      endpointPath: "/cxs/query/event/sessionId",
+      includeTimeRange: true,
+      optimizedQuery: true,
+    });
+    const visitorRequest = buildQueryRequest({
+      baseUrl,
+      siteKey,
+      pagePath,
+      timeRangeKey,
+      endpointPath: "/cxs/query/event/profileId",
       includeTimeRange: true,
       optimizedQuery: true,
     });
 
-    const { signal: combinedSignal, cleanup } = withAbortTimeout(
-      signal,
-      timeoutMs
-    );
+    const { signal: combinedSignal, cleanup } = withAbortTimeout(signal, timeoutMs);
 
     try {
-      const [timeStampResponse, allTimeResponse, directEntryResponse] =
-        await Promise.all([
-          fetch(timeStampRequest.url.toString(), {
-            ...timeStampRequest.options,
-            signal: combinedSignal,
-          }),
-          fetch(allTimeRequest.url.toString(), {
-            ...allTimeRequest.options,
-            signal: combinedSignal,
-          }),
-          fetch(directEntryRequest.url.toString(), {
-            ...directEntryRequest.options,
-            signal: combinedSignal,
-          }),
-        ]);
+      const [
+        timeStampResponse,
+        allTimeResponse,
+        directEntryResponse,
+        sessionResponse,
+        visitorResponse,
+      ] = await Promise.all([
+        fetch(timeStampRequest.url.toString(), {
+          ...timeStampRequest.options,
+          signal: combinedSignal,
+        }),
+        fetch(allTimeRequest.url.toString(), {
+          ...allTimeRequest.options,
+          signal: combinedSignal,
+        }),
+        fetch(directEntryRequest.url.toString(), {
+          ...directEntryRequest.options,
+          signal: combinedSignal,
+        }),
+        fetch(sessionRequest.url.toString(), {
+          ...sessionRequest.options,
+          signal: combinedSignal,
+        }),
+        fetch(visitorRequest.url.toString(), {
+          ...visitorRequest.options,
+          signal: combinedSignal,
+        }),
+      ]);
 
       if (!timeStampResponse.ok) {
         throw new Error(`Unomi request failed (${timeStampResponse.status})`);
@@ -319,10 +347,18 @@ export const getPageInsights = async ({
       if (!directEntryResponse.ok) {
         throw new Error(`Unomi request failed (${directEntryResponse.status})`);
       }
+      if (!sessionResponse.ok) {
+        throw new Error(`Unomi request failed (${sessionResponse.status})`);
+      }
+      if (!visitorResponse.ok) {
+        throw new Error(`Unomi request failed (${visitorResponse.status})`);
+      }
 
       const timeStampData = await timeStampResponse.json();
       const allTimeData = await allTimeResponse.json();
       const directEntryData = await directEntryResponse.json();
+      const sessionData = await sessionResponse.json();
+      const visitorData = await visitorResponse.json();
 
       const allVisits =
         typeof allTimeData === "number"
@@ -333,13 +369,15 @@ export const getPageInsights = async ({
               ? allTimeData._all
               : 0;
       const visitsInRange =
-        typeof timeStampData?._filtered === "number"
-          ? timeStampData._filtered
-          : 0;
-      const directEntries =
-        typeof directEntryData?.false === "number"
-          ? directEntryData.false
-          : 0;
+        typeof timeStampData?._filtered === "number" ? timeStampData._filtered : 0;
+      const directEntries = typeof directEntryData?.false === "number" ? directEntryData.false : 0;
+
+      const uniqueSessions = Object.keys(sessionData || {}).filter(
+        (key) => !key.startsWith("_"),
+      ).length;
+      const uniqueVisitors = Object.keys(visitorData || {}).filter(
+        (key) => !key.startsWith("_"),
+      ).length;
 
       const timeSeriesMap = new Map();
       Object.entries(timeStampData || {}).forEach(([key, value]) => {
@@ -362,12 +400,16 @@ export const getPageInsights = async ({
           allVisits,
           visitsInRange,
           directEntries,
+          uniqueSessions,
+          uniqueVisitors,
         },
         timeSeries,
         raw: {
           timeStampData,
           allTimeData,
           directEntryData,
+          sessionData,
+          visitorData,
         },
       };
 

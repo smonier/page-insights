@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+// import { Button, Dropdown } from "@jahia/moonstone";
+import { Bar, Reload } from "@jahia/moonstone/dist/icons";
 import {
   BarController,
   BarElement,
@@ -42,6 +44,8 @@ type InsightsSummary = {
   allVisits: number | string | null;
   visitsInRange: number | string | null;
   directEntries?: number | string | null;
+  uniqueSessions?: number | string | null;
+  uniqueVisitors?: number | string | null;
   lastActivity: string | null;
   topInterests: string[] | string | null;
 };
@@ -60,6 +64,8 @@ const extractSummary = (insights: Record<string, unknown> | null): InsightsSumma
     allVisits: summary.allVisits ?? null,
     visitsInRange: summary.visitsInRange ?? null,
     directEntries: summary.directEntries ?? null,
+    uniqueSessions: summary.uniqueSessions ?? null,
+    uniqueVisitors: summary.uniqueVisitors ?? null,
     lastActivity: summary.lastActivity || summary.lastSeen || summary.lastEvent || null,
     topInterests: summary.topInterests || summary.interests || summary.topTags || null,
   };
@@ -75,6 +81,17 @@ const formatValue = (value: unknown) => {
   }
 
   return String(value);
+};
+
+const getRangeLabel = (timeRangeKey: string, t: (key: string) => string) => {
+  const rangeMap: Record<string, string> = {
+    last6Months: t("rangeLast6Months"),
+    last3Months: t("rangeLast3Months"),
+    lastMonth: t("rangeLastMonth"),
+    lastWeek: t("rangeLastWeek"),
+    today: t("rangeToday"),
+  };
+  return rangeMap[timeRangeKey] || t("rangeLastMonth");
 };
 
 const PageInsightsBlock = () => {
@@ -339,70 +356,80 @@ const PageInsightsBlock = () => {
 
   return (
     <div className={styles.container}>
-      <div className={styles.headerRow}>
-        <button
-          type="button"
-          className={styles.toggle}
-          aria-expanded={expanded}
-          aria-label={expanded ? t("toggleHide") : t("toggleShow")}
-          onClick={() => setExpanded((prev) => !prev)}
-        >
-          <span className={`${styles.chevron} ${expanded ? styles.chevronExpanded : ""}`} />
-        </button>
+      <div
+        className={styles.headerRow}
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
+        aria-label={expanded ? t("toggleHide") : t("toggleShow")}
+        onClick={() => setExpanded((prev) => !prev)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded((prev) => !prev);
+          }
+        }}
+        style={{ cursor: "pointer" }}
+      >
+        <span className={`${styles.chevron} ${expanded ? styles.chevronExpanded : ""}`} />
         <div className={styles.title}>{t("title")}</div>
         <div className={styles.headerSpacer} />
         {expanded && (
           <>
-            <select
-              className={styles.rangeSelect}
-              aria-label={t("rangeLabel")}
-              value={timeRangeKey}
-              onChange={(event) => {
-                setTimeRangeKey(event.target.value);
-                clearInsightsCache({ pagePath, pageUuid, timeRangeKey });
-                setRefreshIndex((prev) => prev + 1);
-              }}
-            >
-              <option value="last6Months">{t("rangeLast6Months")}</option>
-              <option value="last3Months">{t("rangeLast3Months")}</option>
-              <option value="lastMonth">{t("rangeLastMonth")}</option>
-              <option value="lastWeek">{t("rangeLastWeek")}</option>
-              <option value="today">{t("rangeToday")}</option>
-            </select>
-            <button
-              type="button"
-              className={styles.refreshButton}
-              onClick={() => {
-                clearInsightsCache({ pagePath, pageUuid, timeRangeKey });
-                setRefreshIndex((prev) => prev + 1);
-              }}
-            >
-              {t("refresh")}
-            </button>
-            {isDashboardEnabled && (
-              <button
-                type="button"
-                className={styles.dashboardButton}
-                onClick={() => {
-                  if (dashboardUrl) {
-                    window.open(dashboardUrl, "_blank", "noopener,noreferrer");
-                  }
+            {/* Moonstone Dropdown temporarily replaced with a native select. */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <select
+                className={styles.rangeSelect}
+                value={timeRangeKey}
+                aria-label={t("rangeLabel")}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setTimeRangeKey(nextValue);
+                  clearInsightsCache({ pagePath, pageUuid, timeRangeKey });
+                  setRefreshIndex((prev) => prev + 1);
                 }}
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
+                <option value="last6Months">{t("rangeLast6Months")}</option>
+                <option value="last3Months">{t("rangeLast3Months")}</option>
+                <option value="lastMonth">{t("rangeLastMonth")}</option>
+                <option value="lastWeek">{t("rangeLastWeek")}</option>
+                <option value="today">{t("rangeToday")}</option>
+              </select>
+            </div>
+            {/* Moonstone Button temporarily replaced with a native button. */}
+            <button
+              type="button"
+              className={`${styles.actionButton} ${styles.refreshButton}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                clearInsightsCache({ pagePath, pageUuid, timeRangeKey });
+                setRefreshIndex((prev) => prev + 1);
+              }}
+            >
+              <span className={styles.buttonIcon} aria-hidden="true">
+                <Reload />
+              </span>
+              <span>{t("refresh")}</span>
+            </button>
+            {isDashboardEnabled && (
+              <>
+                {/* Moonstone Button temporarily replaced with a native button. */}
+                <button
+                  type="button"
+                  className={`${styles.actionButton} ${styles.dashboardButton}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dashboardUrl) {
+                      window.open(dashboardUrl, "_blank", "noopener,noreferrer");
+                    }
+                  }}
                 >
-                  <path
-                    fill="currentColor"
-                    d="M3 3h8v8H3V3zm10 0h8v5h-8V3zM3 13h8v8H3v-8zm10 7v-10h8v10h-8z"
-                  />
-                </svg>
-                {t("pageDashboard")}
-              </button>
+                  <span className={styles.buttonIcon} aria-hidden="true">
+                    <Bar />
+                  </span>
+                  <span>{t("pageDashboard")}</span>
+                </button>
+              </>
             )}
           </>
         )}
@@ -432,11 +459,27 @@ const PageInsightsBlock = () => {
                   <div className={styles.cardValue}>{formatValue(summary?.allVisits)}</div>
                 </div>
                 <div className={styles.card}>
-                  <div className={styles.cardLabel}>{t("visitsInRange")}</div>
+                  <div className={styles.cardLabel}>
+                    {t("uniqueSessions")} ({getRangeLabel(timeRangeKey, t)})
+                  </div>
+                  <div className={styles.cardValue}>{formatValue(summary?.uniqueSessions)}</div>
+                </div>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>
+                    {t("uniqueVisitors")} ({getRangeLabel(timeRangeKey, t)})
+                  </div>
+                  <div className={styles.cardValue}>{formatValue(summary?.uniqueVisitors)}</div>
+                </div>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>
+                    {t("visits")} ({getRangeLabel(timeRangeKey, t)})
+                  </div>
                   <div className={styles.cardValue}>{formatValue(summary?.visitsInRange)}</div>
                 </div>
                 <div className={styles.card}>
-                  <div className={styles.cardLabel}>{t("directEntries")}</div>
+                  <div className={styles.cardLabel}>
+                    {t("directEntries")} ({getRangeLabel(timeRangeKey, t)})
+                  </div>
                   <div className={styles.cardValue}>{formatValue(summary?.directEntries)}</div>
                 </div>
               </div>

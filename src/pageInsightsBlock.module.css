@@ -21,12 +21,50 @@
 }
 
 .rangeSelect {
+  appearance: none;
   font-size: 12px;
   border: 1px solid var(--dxp-g-300, #d0d0d0);
   border-radius: 6px;
-  padding: 2px 6px;
+  padding: 2px 22px 2px 6px;
   background: var(--dxp-g-0, #ffffff);
   color: var(--dxp-g-900, #1b1b1b);
+  line-height: 1.4;
+  cursor: pointer;
+  position: relative;
+}
+
+.rangeSelect:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.actionButton {
+  font-size: 12px;
+  border: 1px solid var(--dxp-g-300, #d0d0d0);
+  border-radius: 6px;
+  padding: 2px 8px;
+  background: var(--dxp-g-0, #ffffff);
+  color: var(--dxp-g-900, #1b1b1b);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.actionButton:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.actionButton:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.buttonIcon :global(svg) {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 
 .refreshButton {
@@ -114,8 +152,26 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
+}
+
+@media (max-width: 1200px) {
+  .cardGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .cardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .card {
