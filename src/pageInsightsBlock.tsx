@@ -16,8 +16,6 @@ import {
 } from "chart.js";
 import { clearInsightsCache, getCachedInsights, getPageInsights } from "./unomiInsightsService.js";
 import styles from "./pageInsightsBlock.module.css";
-import i18n from "./i18n";
-import { useNodeInfo } from "@jahia/data-helper";
 
 const NAMESPACE = "page-insights";
 
@@ -31,6 +29,15 @@ Chart.register(
   LinearScale,
   Tooltip,
 );
+
+// Lazy load i18n to avoid side effects at module load time
+let i18nInstance: any = null;
+const getI18n = async () => {
+  if (!i18nInstance) {
+    i18nInstance = (await import("./i18n")).default;
+  }
+  return i18nInstance;
+};
 
 type JContentState = {
   language?: string;
@@ -95,7 +102,8 @@ const getRangeLabel = (timeRangeKey: string, t: (key: string) => string) => {
 };
 
 const PageInsightsBlock = () => {
-  const { t } = useTranslation(NAMESPACE, { i18n });
+  const [i18n, setI18n] = useState<any>(null);
+  const { t } = useTranslation(NAMESPACE, { i18n: i18n || undefined });
   const [timeRangeKey, setTimeRangeKey] = useState("lastMonth");
   const { path, language } = useSelector(
     (state: JContentState) => ({
@@ -104,42 +112,31 @@ const PageInsightsBlock = () => {
     }),
     shallowEqual,
   );
-  const nodeInfo = useNodeInfo(
-    {
-      path: path || undefined,
-      language,
-    },
-    { getSiteInstalledModules: true },
-  );
-  const pagePath = nodeInfo?.node?.path || "";
-  const pageUuid = nodeInfo?.node?.uuid || "";
+
+  // Don't use useNodeInfo - just use path from Redux directly
+  const pagePath = path || "";
+  const pageUuid = ""; // We don't have UUID without querying, but path should be enough
   const siteKey = useMemo(() => {
-    const sitePath = nodeInfo?.node?.site?.path;
-    if (!sitePath) {
+    if (!path) {
       return "";
     }
-    const parts = sitePath.split("/").filter(Boolean);
-    return parts[1] || "";
-  }, [nodeInfo]);
+    // Extract site key from path like /sites/digitall/...
+    const parts = path.split("/").filter(Boolean);
+    if (parts[0] === "sites" && parts[1]) {
+      return parts[1];
+    }
+    return "";
+  }, [path]);
   const pageKey = pagePath || pageUuid;
-  const installedModules = useMemo(() => {
-    const modules = nodeInfo?.node?.site?.installedModulesWithAllDependencies;
-    return Array.isArray(modules) ? modules : [];
-  }, [nodeInfo]);
-  const isJexperienceEnabled = useMemo(() => {
-    if (installedModules.length) {
-      return installedModules.includes("jexperience") && installedModules.includes("page-insights");
-    }
 
-    return true;
-  }, [installedModules]);
-  const isDashboardEnabled = useMemo(() => {
-    if (installedModules.length) {
-      return installedModules.includes("jexperience-dashboards");
-    }
+  // Load i18n instance asynchronously
+  useEffect(() => {
+    getI18n().then(setI18n);
+  }, []);
 
-    return false;
-  }, [installedModules]);
+  // Simplified checks - assume modules are available
+  const isJexperienceEnabled = true;
+  const isDashboardEnabled = true;
   const dashboardUrl = useMemo(() => {
     if (!siteKey || !pagePath || typeof window === "undefined") {
       return "";
@@ -350,7 +347,8 @@ const PageInsightsBlock = () => {
     setExpanded(true);
   };
 
-  if (nodeInfo?.loading || !pageKey || !isJexperienceEnabled) {
+  // Check after all hooks - Rules of Hooks require all hooks to be called before any early returns
+  if (!language || !pageKey || !isJexperienceEnabled) {
     return null;
   }
 

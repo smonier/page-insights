@@ -4,11 +4,6 @@
     import {loadShare} from "@module-federation/runtime";
     const importMap = {
       
-        "@jahia/data-helper": async () => {
-          let pkg = await import("__mf__virtual/page_mf_2_insights__prebuild___mf_0_jahia_mf_1_data_mf_2_helper__prebuild__.js");
-            return pkg;
-        }
-      ,
         "@jahia/ui-extender": async () => {
           let pkg = await import("__mf__virtual/page_mf_2_insights__prebuild___mf_0_jahia_mf_1_ui_mf_2_extender__prebuild__.js");
             return pkg;
@@ -37,36 +32,6 @@
     }
       const usedShared = {
       
-          "@jahia/data-helper": {
-            name: "@jahia/data-helper",
-            version: "1.1.17",
-            scope: ["default"],
-            loaded: false,
-            from: "page-insights",
-            async get () {
-              if (false) {
-                throw new Error(`Shared module '${"@jahia/data-helper"}' must be provided by host`);
-              }
-              usedShared["@jahia/data-helper"].loaded = true
-              const {"@jahia/data-helper": pkgDynamicImport} = importMap
-              const res = await pkgDynamicImport()
-              const exportModule = {...res}
-              // All npm packages pre-built by vite will be converted to esm
-              Object.defineProperty(exportModule, "__esModule", {
-                value: true,
-                enumerable: false
-              })
-              return function () {
-                return exportModule
-              }
-            },
-            shareConfig: {
-              singleton: true,
-              requiredVersion: "^1.1.17",
-              
-            }
-          }
-        ,
           "@jahia/ui-extender": {
             name: "@jahia/ui-extender",
             version: "1.2.0",

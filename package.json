@@ -52,7 +52,7 @@
     "static-resources": "/javascript/apps,/dist/client,/dist/assets,/locales,/images,/icons"
   },
   "dependencies": {
-    "@jahia/data-helper": "^1.1.16",
+    "@jahia/data-helper": "^1.1.14",
     "@jahia/moonstone": "^2.17.3",
     "@jahia/ui-extender": "^1.2.0",
     "@jahia/vite-federation-plugin": "^0.1.0",
