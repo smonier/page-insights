@@ -1,2 +1,0 @@
-import{g as t}from"./_commonjsHelpers-CqkleIqs.js";import{p as r}from"./page_mf_2_insights__mf_v__runtimeInit__mf_v__-CsGJ69y1.js";const{initPromise:_}=r,o=_.then(e=>e.loadShare("react",{customShareInfo:{shareConfig:{singleton:!0,strictVersion:!1,requiredVersion:"^18.3.1"}}})),a=await o.then(e=>e());var s=a;const m=t(s);export{m as a,s as p};
-//# sourceMappingURL=page_mf_2_insights__loadShare__react__loadShare__-BtZvGOZQ.js.map

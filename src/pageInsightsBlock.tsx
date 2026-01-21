@@ -105,6 +105,7 @@ const PageInsightsBlock = () => {
   const [i18n, setI18n] = useState<any>(null);
   const { t } = useTranslation(NAMESPACE, { i18n: i18n || undefined });
   const [timeRangeKey, setTimeRangeKey] = useState("lastMonth");
+  const [expanded, setExpanded] = useState<boolean>(false);
   const { path, language } = useSelector(
     (state: JContentState) => ({
       path: state.jcontent?.path,
@@ -144,12 +145,31 @@ const PageInsightsBlock = () => {
 
     const host = window.location.host || "";
     const serverName = host.split(".")[0] || "";
-    const scope = encodeURIComponent(siteKey);
-    const pagePathParam = encodeURIComponent(pagePath);
 
-    return `${window.location.origin}/modules/kibana-proxy/s/${serverName}-kibana-dashboard/app/dashboards#/view/4a272170-ba5f-11eb-8d2f-1d6f2e41a267?embed=true&show-time-filter=true&_a=(filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a6ca12a0-453b-11eb-b316-7d4f6c44727d,key:scope.keyword,negate:!f,params:(query:'${scope}'),type:phrase),query:(match_phrase:(scope.keyword:'${scope}'))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a6ca12a0-453b-11eb-b316-7d4f6c44727d,key:target.properties.pageInfo.pagePath.keyword,negate:!f,params:(query:${pagePathParam}),type:phrase),query:(match_phrase:(target.properties.pageInfo.pagePath.keyword:${pagePathParam})))),query:(language:kuery,query:''))`;
+    // Helper to output a Rison value: unquoted if safe, otherwise single-quoted with doubled single quotes
+    const risonValue = (v: unknown) => {
+      const s = String(v ?? "");
+      // Allow unquoted Rison values for common keywords and paths (matches the desired output)
+      const isSafe = /^[A-Za-z0-9_\-./~]+$/.test(s);
+      if (isSafe) {
+        return s;
+      }
+      return `'${s.replace(/'/g, "''")}'`;
+    };
+
+    const scopeV = risonValue(siteKey);
+    const pagePathV = risonValue(pagePath);
+
+    return (
+      `${window.location.origin}` +
+      `/modules/kibana-proxy/s/${serverName}-kibana-dashboard/app/kibana#/dashboard/4ddd804d-573f-426f-a482-40cd4ee3ea70` +
+      `?embed=true&show-time-filter=true` +
+      `&_a=(filters:!(` +
+      `('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'0951f5f6-4741-407e-97a8-9eb7324abc20',key:scope.keyword,negate:!f,params:(query:${scopeV}),type:phrase),query:(match_phrase:(scope.keyword:${scopeV}))),` +
+      `('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'0951f5f6-4741-407e-97a8-9eb7324abc20',key:target.properties.pageInfo.pagePath.keyword,negate:!f,params:(query:${pagePathV}),type:phrase),query:(match_phrase:(target.properties.pageInfo.pagePath.keyword:${pagePathV})))` +
+      `),query:(language:kuery,query:''))`
+    );
   }, [siteKey, pagePath]);
-  const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState("idle");
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -360,11 +380,11 @@ const PageInsightsBlock = () => {
         tabIndex={0}
         aria-expanded={expanded}
         aria-label={expanded ? t("toggleHide") : t("toggleShow")}
-        onClick={() => setExpanded((prev) => !prev)}
+        onClick={() => setExpanded((prev: boolean) => !prev)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            setExpanded((prev) => !prev);
+            setExpanded((prev: boolean) => !prev);
           }
         }}
         style={{ cursor: "pointer" }}
