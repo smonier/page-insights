@@ -15,6 +15,8 @@ import {
   Tooltip,
 } from "chart.js";
 import { clearInsightsCache, getCachedInsights, getPageInsights } from "./unomiInsightsService.js";
+import { fetchDashboardConfig, type DashboardConfig } from "./queries";
+import { buildDashboardUrl, extractDashboardPath, extractIndexFromSearchSource } from "./utils";
 import styles from "./pageInsightsBlock.module.css";
 
 const NAMESPACE = "page-insights";
@@ -135,41 +137,73 @@ const PageInsightsBlock = () => {
     getI18n().then(setI18n);
   }, []);
 
+  // Fetch dashboard configuration
+  const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig | null>(null);
+
+  useEffect(() => {
+    console.log("[PageInsights] Fetching dashboard config...");
+    fetchDashboardConfig().then((config) => {
+      console.log("[PageInsights] Dashboard config loaded:", config);
+      setDashboardConfig(config);
+    });
+  }, []);
+
   // Simplified checks - assume modules are available
   const isJexperienceEnabled = true;
   const isDashboardEnabled = true;
   const dashboardUrl = useMemo(() => {
+    console.log("[PageInsights] Computing dashboardUrl...", {
+      siteKey,
+      pagePath,
+      hasDashboardConfig: !!dashboardConfig,
+    });
+
     if (!siteKey || !pagePath || typeof window === "undefined") {
+      console.log("[PageInsights] Missing required data for dashboard URL");
       return "";
     }
 
-    const host = window.location.host || "";
-    const serverName = host.split(".")[0] || "";
+    // If config not loaded yet, return empty (will disable button)
+    if (!dashboardConfig) {
+      console.log("[PageInsights] Dashboard config not loaded yet");
+      return "";
+    }
 
-    // Helper to output a Rison value: unquoted if safe, otherwise single-quoted with doubled single quotes
-    const risonValue = (v: unknown) => {
-      const s = String(v ?? "");
-      // Allow unquoted Rison values for common keywords and paths (matches the desired output)
-      const isSafe = /^[A-Za-z0-9_\-./~]+$/.test(s);
-      if (isSafe) {
-        return s;
+    const { dashboardURL, searchSourceJSON } = dashboardConfig;
+
+    if (!dashboardURL || !searchSourceJSON) {
+      console.warn("Dashboard config incomplete:", { dashboardURL, searchSourceJSON });
+      return "";
+    }
+
+    try {
+      // Extract the path portion from dashboardURL
+      const dashboardPath = extractDashboardPath(dashboardURL);
+
+      // Parse searchSourceJSON to extract the index
+      const indexValue = extractIndexFromSearchSource(searchSourceJSON);
+
+      if (!indexValue) {
+        console.warn("Could not extract index from searchSourceJSON");
       }
-      return `'${s.replace(/'/g, "''")}'`;
-    };
 
-    const scopeV = risonValue(siteKey);
-    const pagePathV = risonValue(pagePath);
+      // Build the dynamic dashboard URL
+      const finalUrl = buildDashboardUrl({
+        origin: window.location.origin,
+        dashboardPath,
+        indexValue,
+        siteKey,
+        pagePath,
+      });
 
-    return (
-      `${window.location.origin}` +
-      `/modules/kibana-proxy/s/${serverName}-kibana-dashboard/app/kibana#/dashboard/4ddd804d-573f-426f-a482-40cd4ee3ea70` +
-      `?embed=true&show-time-filter=true` +
-      `&_a=(filters:!(` +
-      `('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'0951f5f6-4741-407e-97a8-9eb7324abc20',key:scope.keyword,negate:!f,params:(query:${scopeV}),type:phrase),query:(match_phrase:(scope.keyword:${scopeV}))),` +
-      `('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'0951f5f6-4741-407e-97a8-9eb7324abc20',key:target.properties.pageInfo.pagePath.keyword,negate:!f,params:(query:${pagePathV}),type:phrase),query:(match_phrase:(target.properties.pageInfo.pagePath.keyword:${pagePathV})))` +
-      `),query:(language:kuery,query:''))`
-    );
-  }, [siteKey, pagePath]);
+      console.log("Built dashboard URL:", finalUrl);
+      return finalUrl;
+    } catch (error) {
+      console.error("Failed to build dashboard URL:", error);
+      return "";
+    }
+  }, [siteKey, pagePath, dashboardConfig]);
+
   const [status, setStatus] = useState("idle");
   const [data, setData] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -435,8 +469,10 @@ const PageInsightsBlock = () => {
                 <button
                   type="button"
                   className={`${styles.actionButton} ${styles.dashboardButton}`}
+                  disabled={!dashboardUrl}
                   onClick={(e) => {
                     e.stopPropagation();
+                    console.log("Dashboard button clicked, URL:", dashboardUrl);
                     if (dashboardUrl) {
                       window.open(dashboardUrl, "_blank", "noopener,noreferrer");
                     }
