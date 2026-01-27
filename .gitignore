@@ -8,6 +8,7 @@
 # Node
 dist
 node_modules
+javascript/*
 
 # Yarn
 .yarn/*
@@ -18,3 +19,5 @@ node_modules
 !.yarn/versions
 
 .env
+.vscode
+.DS_Store
