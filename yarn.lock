@@ -1050,6 +1050,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@smonier/page-insights@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@smonier/page-insights@workspace:."
+  dependencies:
+    "@eslint-react/eslint-plugin": "npm:^2.0.0"
+    "@eslint/compat": "npm:^2.0.0"
+    "@eslint/js": "npm:^9.26.0"
+    "@jahia/data-helper": "npm:^1.1.14"
+    "@jahia/moonstone": "npm:^2.17.3"
+    "@jahia/ui-extender": "npm:^1.2.0"
+    "@jahia/vite-federation-plugin": "npm:^0.1.0"
+    "@jahia/vite-plugin": "npm:^1.1.0"
+    "@types/prop-types": "npm:^15"
+    "@types/react": "npm:^19.1.2"
+    chart.js: "npm:^4.4.3"
+    eslint: "npm:^9.26.0"
+    globals: "npm:^16.0.0"
+    i18next: "npm:^25.0.2"
+    prettier: "npm:^3.5.3"
+    prop-types: "npm:^15.8.1"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    react-i18next: "npm:^16.0.0"
+    react-redux: "npm:^9.2.0"
+    react-table: "npm:^7.8.0"
+    typescript: "npm:^5.8.3"
+    typescript-eslint: "npm:^8.31.1"
+    typescript-plugin-css-modules: "npm:^5.1.0"
+    vite: "npm:^7.0.0"
+    vitest: "npm:^4.0.16"
+  languageName: unknown
+  linkType: soft
+
 "@standard-schema/spec@npm:^1.0.0":
   version: 1.1.0
   resolution: "@standard-schema/spec@npm:1.1.0"
@@ -2946,39 +2979,6 @@ __metadata:
   checksum: 10c0/a5030935d3cb2919d7e89454d1ce82141e6f9955413658b8c9403cfe379283770ed3048146b44cde168aa9e8c716505f196d5689db0ae3ce9a71521a2fef3abd
   languageName: node
   linkType: hard
-
-"page-insights@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "page-insights@workspace:."
-  dependencies:
-    "@eslint-react/eslint-plugin": "npm:^2.0.0"
-    "@eslint/compat": "npm:^2.0.0"
-    "@eslint/js": "npm:^9.26.0"
-    "@jahia/data-helper": "npm:^1.1.14"
-    "@jahia/moonstone": "npm:^2.17.3"
-    "@jahia/ui-extender": "npm:^1.2.0"
-    "@jahia/vite-federation-plugin": "npm:^0.1.0"
-    "@jahia/vite-plugin": "npm:^1.1.0"
-    "@types/prop-types": "npm:^15"
-    "@types/react": "npm:^19.1.2"
-    chart.js: "npm:^4.4.3"
-    eslint: "npm:^9.26.0"
-    globals: "npm:^16.0.0"
-    i18next: "npm:^25.0.2"
-    prettier: "npm:^3.5.3"
-    prop-types: "npm:^15.8.1"
-    react: "npm:^18.3.1"
-    react-dom: "npm:^18.3.1"
-    react-i18next: "npm:^16.0.0"
-    react-redux: "npm:^9.2.0"
-    react-table: "npm:^7.8.0"
-    typescript: "npm:^5.8.3"
-    typescript-eslint: "npm:^8.31.1"
-    typescript-plugin-css-modules: "npm:^5.1.0"
-    vite: "npm:^7.0.0"
-    vitest: "npm:^4.0.16"
-  languageName: unknown
-  linkType: soft
 
 "parent-module@npm:^1.0.0":
   version: 1.0.1

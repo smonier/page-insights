@@ -1,7 +1,7 @@
 {
-  "name": "page-insights",
+  "name": "@smonier/page-insights",
   "version": "1.0.0",
-  "description": "Jahia Page Insights Module",
+  "description": "Displays real-time analytics and visitor insights for Jahia pages directly in the jContent interface. Provides key metrics like page views, unique visitors, sessions, and time-series trends with seamless integration to Kibana dashboards for detailed analysis.",
   "main": "dist/server/index.js",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "module",
     "page-insights"
   ],
-  "author": "Stéphane Monier <",
+  "author": "Stéphane Monier <smonier@jahia.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/smonier/page-insights/issues"
@@ -26,6 +26,7 @@
     "settings",
     "static"
   ],
+  
   "scripts": {
     "build": "tsc --noEmit && vite build && run package",
     "clean": "rm -rf dist/",
@@ -62,11 +63,26 @@
     "node": ">=22.0.0"
   },
   "jahia": {
+    "required-version": "8.2.1.0",
     "name": "page-insights",
-    "snapshot": true,
-    "module-dependencies": "default,jexperience",
+    "snapshot": false,
+    "module-dependencies": "default,jexperience,javascript-modules-engine=[1,2)",
     "module-type": "module",
-    "static-resources": "/javascript/apps,/dist/client,/dist/assets,/locales,/images,/icons"
+    "static-resources": "/javascript/apps,/dist/client,/dist/assets,/locales,/images,/icons",
+    "server": "dist/server/index.js",
+    "maven": {
+      "groupId": "org.jahia.modules.se.javascript",
+      "distributionManagement": {
+        "repository": {
+          "id": "jahia-releases",
+          "url": "https://devtools.jahia.com/nexus/content/repositories/jahia-releases"
+        },
+        "snapshotRepository": {
+          "id": "jahia-snapshots",
+          "url": "https://devtools.jahia.com/nexus/content/repositories/jahia-snapshots"
+        }
+      }
+    }
   },
   "dependencies": {
     "@jahia/data-helper": "^1.1.14",
