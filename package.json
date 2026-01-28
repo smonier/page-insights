@@ -1,6 +1,23 @@
 {
   "name": "page-insights",
-  "version": "0.0.2",
+  "version": "1.0.0",
+  "description": "Jahia Page Insights Module",
+  "main": "dist/server/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://github.com/smonier/page-insights.git"
+  },
+  "keywords": [
+    "jahia",
+    "module",
+    "page-insights"
+  ],
+  "author": "Stéphane Monier <",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/smonier/page-insights/issues"
+  },
+  "homepage": "https://github.com/smonier/page-insights",
   "type": "module",
   "files": [
     "dist",
